@@ -1,0 +1,487 @@
+PennController.Sequence("consent", "init", "audio_check", "instr","practice1","practice2", randomize("exp5Task"),"upload", "send" ,"debrief", "exit" );
+PennController.DebugOff();
+PennController.ResetPrefix(null);
+PennController.SendResults( "send" );
+PennController.UploadRecordings("upload");
+
+InitiateRecorder( "https://hjpatt-136.umd.edu/Web_Experiments/Slevc/meg/PCIbex.php")
+    .label("init");
+newText("This experiment collects audio recordings. <strong>Once you grant it access to your recording device, you will be notified of whether you are being recorded by a label at the top of the page</strong>");
+
+PennController( "consent" ,
+        
+        defaultText
+            .print()
+        ,
+        newVar("compensation")
+        ,
+        
+        newHtml("intro", "Consent-PAID-Online.html")
+            .settings.radioWarning("Please choose one of the options before continuing")
+            .print()
+        ,
+        
+        newText("<br/>")
+        ,
+        newText("<br/>")
+        ,
+        
+        newButton("By clicking this button I indicate my consent")
+            .print()
+            .wait(
+                getHtml("intro").test.complete()
+                    .failure( newText("Please choose one of the compensation options above before continuing!").color("red").print())
+                    .success(
+                        newFunction(function(){
+                            //let keys = document.getElementsByClassName("obligatory");
+                            let keys = document.getElementById("compensation");
+                            var ele = document.getElementsByName('compensation'); 
+                            for(i = 0; i < ele.length; i++) { 
+                                if(ele[i].checked){
+                                    return ele[i].value;
+                                }
+                            } 
+                            return "none";
+                        }).setVar("compensation")
+                        ,
+                        getVar("compensation").set(getVar("compensation")).log("set")
+                    )
+            )
+)
+.log( "ParticipantID", PennController.GetURLParameter("id") );
+
+newTrial( "audio_check" ,
+    defaultText.css({"text-align":"center", "margin-bottom":"1em"}).center().print()
+    ,
+    newText("instr-1", "Before starting, record yourself saying 'This is a test.' and play it back to ensure your microphone is adjusted properly.")
+    ,
+    newMediaRecorder("audiotest1", "audio")
+        .log()
+        .print()
+        .wait()
+    ,
+    newText("testagain", "If it seems to you that the audio is not clear and/or there is too much background noise, re-adjust and try again.")
+    ,
+    newText("next", "If the audio seems clear and of good quality, press CONTINUE")
+    ,
+    newButton("Continue").center().print().wait()
+)
+
+PennController( "instr" ,
+        
+        defaultText
+            .print()
+        ,
+        
+        newText("<p><strong>Experiment Instructions</strong></p>")
+        ,
+        
+        newText("<br/>")
+        ,
+        newText("<br/>")
+        ,
+        
+        newText("<p>On each trial of this experiment, you will see a series of images presented one by one. <br/> Your task is to create a well-formed sentence using the elements illustrated in the pictures.<br/> </p>")
+        ,
+        newText("<p>The image in the blue square will be the verb in each sentence.</p>")
+            .color("blue")
+        ,
+        newText("<p> When you see all the pictures, you should describe what is happening in that <br/> series by speaking into your computer's microphone. </p>")
+        ,
+        newText("If you are unsure of what the verb image is meant to be, name it to the best of your ability. Similarly, the clock image may not mean anything, so if there is no time on the clock, you do not have to say any specific time.")
+        ,
+        newText("<p>Each trial will start when you press the SPACE KEY, at which point you will see each picture.<br/>  You should describe the picture out loud, then press the SPACE KEY to continue.</p>")
+        ,
+        newText("<br/>")
+        ,
+        newText("<p>Now, press the button below for an example.</p>")
+        ,
+        
+        newText("<br/>")
+        ,
+        newText("<br/>")
+        ,
+        
+        newButton("button", "Continue")
+            .print()
+            .wait()
+);
+
+PennController( "practice1" ,
+        
+        newCanvas("screen", 800,500)
+            .center()
+            .print()
+        ,
+        newText("cue", "+")
+        ,
+        
+        getCanvas("screen").add("center at 50%","middle at 50%", getText("cue") )
+        ,
+        
+        newTimer("wait", 1000)
+        ,
+        getTimer("wait")
+            .start()
+            .wait()
+            ,
+        getCanvas("screen").remove(getText("cue"))
+        
+        ,
+        newMediaRecorder("practice1_"+PennController.GetURLParameter("id"),"audio")
+            .record()
+        ,
+        newImage("tomorrow", "tomorrow.png") //TIME PICTURE w/text
+            .size(250,250)
+        ,
+        
+        getCanvas("screen")
+            .add("center at 5%","middle at 40%", getImage("tomorrow"))
+        ,
+        
+        
+        newImage("subj1", "obj057.bmp") //SUBJ PICTURE w/purple border
+            .size(250,250)
+        ,
+        getCanvas("screen")
+            .add("center at 35%","middle at 40%", getImage("subj1"))
+        ,
+        
+        newImage("verb1", "act173.bmp") //VERB PICTURE w/blue border
+            .size(250,250)
+        ,
+        newImage("blue", "blue.png") //VERB PICTURE w/blue border
+            .size(300,300)
+        ,
+        getCanvas("screen")
+            .add("center at 65%","middle at 40%", getImage("verb1"))
+        ,
+        getCanvas("screen")
+            .add("center at 65%","middle at 40%", getImage("blue"))
+        ,
+        
+        newImage("obj1", "obj051.bmp") //OBJ PICTURE w/black border
+            .size(250,250)
+        ,
+        getCanvas("screen")
+            .add("center at 100%","middle at 40%", getImage("obj1"))
+    
+        ,
+ 
+        newText("cont", "<i>Describe the pictures. <br/> Press SPACE when finished.</i>")
+        ,
+        
+        getCanvas("screen")
+            .add("center at 50%","middle at 85%", getText("cont"))
+            .print()
+        ,
+        
+
+        
+        newKey(" ")
+            .wait()
+     
+        ,
+        
+        getMediaRecorder("practice1_"+PennController.GetURLParameter("id"))
+            .stop()
+            // .play()
+            // .wait("playback")
+        ,
+        
+        getCanvas("screen")
+            .remove(getImage("tomorrow"))
+            .remove(getImage("subj1"))
+            .remove(getImage("verb1"))
+            .remove(getImage("blue"))
+            .remove(getImage("obj1"))
+            .remove(getText("cont"))
+        ,
+        newText("exp1","<p>So there you saw a series of images (a clock, a subject, a verb in a blue square, and an object).  So you should have said something like:</p>")
+        ,
+        newText("exp2","<p>\"Tomorrow, the boy will read a book.\" </p>") 
+        ,
+        newImage("example", "example.png") 
+            .size(800, 250)
+        ,
+        newText("exp3","<p>(Note that you should use the form of the verb that matches the time image - TOMORROW the boy \"will read\", etc.)</p>")
+        ,
+        newText("exp4","<p>Press the button below for another practice trial.</p>")
+        ,
+        newButton("button", "Continue")
+        ,
+        getCanvas("screen")
+            .add("center at 50%","middle at 5%", getText("exp1"))
+            .add("center at 50%","middle at 15%", getText("exp2"))
+            .add("center at 50%","middle at 45%", getImage("example"))
+            .add("center at 50%","middle at 75%", getText("exp3"))
+            .add("center at 50%","middle at 85%", getText("exp4"))
+            .add("center at 50%","middle at 95%", getButton("button"))
+            .print()
+        ,
+        getButton("button").wait()
+
+);
+
+PennController( "practice2" ,
+        
+        newCanvas("screen", 800,500)
+            .center()
+            .print()
+        ,
+        newText("cue", "+")
+        ,
+        
+        getCanvas("screen").add("center at 50%","middle at 50%", getText("cue") )
+        ,
+        
+        newTimer("wait", 1000)
+        ,
+        getTimer("wait")
+            .start()
+            .wait()
+            ,
+        getCanvas("screen").remove(getText("cue"))
+        ,
+        newMediaRecorder("practice2_"+PennController.GetURLParameter("id"),"audio")
+        .record()
+    ,
+        
+        newImage("clock", "clock.png") //TIME PICTURE w/text
+            .size(200,200)
+        ,
+        
+        getCanvas("screen")
+            .add("center at 5%","middle at 40%", getImage("clock"))
+        ,
+        
+
+        newImage("subj1", "obj480.bmp") //SUBJ PICTURE w/purple border
+            .size(250,250)
+        ,
+        getCanvas("screen")
+            .add("center at 35%","middle at 40%", getImage("subj1"))
+        ,
+        
+        
+        newImage("verb1", "act048.bmp") //VERB PICTURE w/blue border
+            .size(250,250)
+        ,
+        newImage("blue", "blue.png") //VERB PICTURE w/blue border
+            .size(300,300)
+        ,
+        getCanvas("screen")
+            .add("center at 65%","middle at 40%", getImage("verb1"))
+        ,
+        getCanvas("screen")
+            .add("center at 65%","middle at 40%", getImage("blue"))
+        ,
+        
+        
+        newImage("obj1", "ex2obj.png") //OBJ PICTURE w/black border
+            .size(250,250)
+        ,
+        getCanvas("screen")
+            .add("center at 100%","middle at 40%", getImage("obj1"))
+    
+,
+        
+        newText("cont", "<i>Describe the pictures. <br/> Press SPACE when finished.</i>")
+        ,
+        
+        getCanvas("screen")
+            .add("center at 50%","middle at 85%", getText("cont"))
+            .print()
+        ,
+       
+
+        
+        newKey(" ")
+            .wait()
+        ,
+        
+       
+        
+        getMediaRecorder("practice2_"+PennController.GetURLParameter("id"))
+            .stop()
+            // .play() 
+            // .wait("playback")
+        ,
+        
+        getCanvas("screen")
+            .remove(getImage("clock"))
+            .remove(getImage("subj1"))
+            .remove(getImage("verb1"))
+            .remove(getImage("blue"))
+            .remove(getImage("obj1"))
+            .remove(getText("cont"))
+        ,
+        
+        newButton("button", "Continue")
+        ,
+        newText("exp1","<p>So there you saw a series of images (a time/adverb, a subject, a verb in a blue square, and an object).  So you should have said something like:</p>")
+        ,
+        newText("exp2","<p>\"The unicorn counts flowers.\" </p>") 
+        ,
+        newText("exp3","Since there were no hands on the clock, you didn't have to say anything for this picture and you should have used the present tense for the verb.") //edit to match pictures
+        ,
+        newImage("example2", "example2.png")
+            .size(800, 250)
+        ,
+        newText("exp4","<p>That's pretty much it.  There are 48 trials, which will probably take you about 10 minutes to complete.</p>") //how many trials
+        ,
+        newText("exp5", "<p>Remember to press the SPACE KEY when you finish speaking your sentence out loud.<p>")
+            .bold()
+        ,
+        newText("exp6", "<p>Please press below when you are ready to begin.</p>")
+        ,
+        
+        getCanvas("screen")
+        .add("center at 50%","middle at 5%", getText("exp1"))
+        .add("center at 50%","middle at 10%", getText("exp2"))
+        .add("center at 50%","middle at 40%", getImage("example2"))
+        .add("center at 50%","middle at 70%", getText("exp3"))
+        .add("center at 50%","middle at 77%", getText("exp4"))
+        .add("center at 50%","middle at 87%", getText("exp5"))
+        .add("center at 50%","middle at 95%", getText("exp6"))
+        .add("center at 50%","middle at 100%", getButton("button"))
+        ,
+        getButton("button").wait()
+);
+
+PennController.Template( "exp5.csv" ,
+    variable => PennController( "exp5Task" ,
+    
+        newVar("check",0)
+        ,
+        
+        newCanvas("screen", 800,580)
+            .center()
+            .print()
+        ,
+        
+        newText("cue", "+")
+        ,
+        
+        getCanvas("screen").add("center at 50%","middle at 50%", getText("cue") )
+        ,
+        newTimer("wait", 1000)
+        ,
+        getTimer("wait")
+            .start()
+            .wait()
+        ,
+        
+        getCanvas("screen").remove(getText("cue"))
+        ,
+        
+        newTimer("trial", 1200)
+        ,
+        getTimer("trial")
+            .start()
+        ,
+        newMediaRecorder(variable.Item+"_"+PennController.GetURLParameter("id"),"audio")
+            .record()
+        ,
+        newImage("Tense", variable.Tense) //TIME PICTURE w/text
+            .size(250,250)
+        ,
+        getCanvas("screen")
+            .add("center at 0%","middle at 40%", getImage("Tense"))
+        ,
+        
+        newImage("SUBJ", variable.SUBJ) //SUBJ PICTURE w/purple border
+            .size(250,250)
+        ,
+        
+        getCanvas("screen")
+            .add("center at 30%","middle at 40%", getImage("SUBJ"))
+        ,
+        
+        newImage("ACT", variable.ACT) //VERB PICTURE w/blue border
+            .size(250,250)
+        ,
+        newImage("blue", "blue.png") //VERB PICTURE w/blue border
+            .size(300,300)
+        ,
+        getCanvas("screen")
+            .add("center at 65%","middle at 40%", getImage("ACT"))
+        ,
+        getCanvas("screen")
+            .add("center at 65%","middle at 40%", getImage("blue"))
+        ,
+        
+        
+        newImage("OBJ", variable.OBJ) //OBJ PICTURE w/black border
+            .size(250,250)
+        ,
+        
+        getCanvas("screen")
+            .add("center at 100%","middle at 40%", getImage("OBJ"))
+        ,
+        
+        newText("cont", "<i>Describe the pictures. <br/>Press SPACE when finished.</i>")
+            .bold()
+        ,
+        
+        getCanvas("screen")
+            .add("center at 50%","middle at 75%", getText("cont"))
+            .print()
+        ,
+        newKey(" ").callback( getTimer("timeout").stop() ).log("all")
+,
+        newTimer("timeout", 12000).start().log().wait()
+,
+        
+         newCanvas("screen2", 800,580)
+            .center()
+            .add("center at 50%","middle at 50%", getText("cue") )
+            .print()
+        ,
+        
+        newTimer("timing", 500)
+            .start()
+            .wait()
+        ,
+
+        getCanvas("screen2").remove(getText("cue"))
+        
+    )
+    .log( "ParticipantID", PennController.GetURLParameter("id") )
+    .log("Tense", variable.Tense)
+    .log("SUBJ", variable.SUBJ)
+    .log("ACT", variable.ACT)
+    .log("OBJ", variable.OBJ)
+);
+
+
+PennController( "debrief" ,
+        defaultText
+            .print()
+        ,
+        
+        newText("<p><strong>Thank you for participating!</strong></p>")
+        ,
+        
+        newText("<br/>")
+        ,
+
+        newText("<p>This experiment is investigating how people produce sentences when given images one by one <br/>Specifically, we are looking at the time it takes to produce a sentence, the grammaticality, and the tense-marking on the verb. <br/> We are investigating how aphasia patients, similarly aged adults, and young adults differ in their sentence production when given the same pictures. </p>")
+        ,
+        newText("<p>Of course, we don’t know the results of this experiment yet as we are still collecting data. However, if <br/>you still have any questions about this experiment, please feel free to contact Dr. Slevc at slevc@umd.edu.</p>")
+        ,
+        newText("<p>Finally, please don’t share any information about the experiment with other people who <br/>might participate, just in case knowing the goal of the experiment could bias peoples’ responses in some way.</p>")
+        ,
+        newText('<a href="https://umpsychology.sona-systems.com/webstudy_credit.aspx?experiment_id=1640&credit_token=e20ddf267343402cb3a5fc8a2950eb8f&survey_code='+GetURLParameter('id')+'" rel="nofollow">Click here to confirm participation on SONA</a>.')
+            .print()
+            .wait()
+
+);
+
+
+PennController( "exit" ,
+        newText("<p>You may now close your browser window.</p>").print()
+        ,
+        newTimer("dummy", 10)
+            .wait() // This will wait forever
+); 
